@@ -1,1 +1,5 @@
-playbook
+---
+- hosts: all
+  vars_files: vars.yaml
+
+  tasks:
