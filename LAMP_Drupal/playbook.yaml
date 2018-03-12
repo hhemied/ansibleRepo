@@ -18,6 +18,11 @@
         - curl
         - sendmail
         - httpd
+        - wget
+        - unzip
+        - php-xml
+        - php-pear
+        - php-fpm
         - php55
         - php55-php
         - php55-php-mysqlnd
@@ -26,6 +31,14 @@
         - python-mysqldb
         - mariadb-server
 
+    - name: Stop firewall
+      service: name=firewalld state=stopped enabled=false
+
+    - name: Start apache, MySQL and PHP
+      service: name={{ item }} state=started enabled=true
+      with_items:
+        - httpd
+        - mariadb
 
   handlers:
     - name: restart apache
