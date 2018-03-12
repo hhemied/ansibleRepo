@@ -1,0 +1,47 @@
+---
+- hosts: all
+  sudo: yes
+  vars:
+    node_apps_location: "node_appss_location=/usr/local/opt/node"
+
+  tasks:
+    - name: Import remi gpg key
+      rpm_key: "key={{ item }} state=present"
+      with_items:
+        - "http://rpms.famillecollet.com/RPM-GPG-KEY-remi"
+
+    - name: Install EPEL repo
+      yum: name=epel-release state=present
+
+    - name: Install remi repo
+      command: 'rpm -Uvh --force {{ item.href }} creates={{ item.creates }}'
+      with_items:
+        - href: "http://rpms.famillecollet.com/enterprise/remi-release-7.rpm"
+          creates: '/etc/yum.repos.d/remi.repo'
+
+    - name: Ensure firewalld is stopped # test server only
+      service: name=firewalld state=stopped enabled=False
+
+    - name: Install Node.js and npm
+      yum: name=npm state=latest enablerepo=epel
+
+    - name: Install Forever # run node.js app
+      npm: name=forever global=yes state=latest
+
+    - name: Ensure Node.js app folder exists
+      file: "path={{ node_apps_location }} state=directory"
+
+    - name: Copy example Node.js app to server
+      copy: "src=app dest={{ node_apps_location }}"
+
+    - name: Install app dependencies ddefined in package.json
+      npm: path={{ node_apps_location }}/app
+
+    - name: Check list of running Node.js app
+      command: forever list
+      register: forever_list
+      changed_when: false
+
+    - name: Start example Node.js app
+      command: "forever start {{ node_apps_location }}/app/app.js"
+      when: "forever_list.stdout.find('{{ node_apps_location }}/app/app.js') == -1"
