@@ -1,0 +1,2 @@
+[serv]
+192.168.60.200 ansible_ssh_user=vagrant
