@@ -99,6 +99,13 @@
     - name: Secures the MySQL root user for server_hostname domain
       mysql_user: user="root" password="{{ mysql_root_password }}" host="{{ ansible_fqdn }}"
 
+    - name: Create Drupal DB admin 
+      mysql_user: name=omar state=present host=localhost password={{ mysql_root_password }} priv='*.*:ALL,GRANT'
+
+      
+    - name: Create drupal DB
+      mysql_db: name=drupal state=present
+
   handlers:
     - name: restart apache
       service: name=httpd state=restarted enabled=true
