@@ -4,17 +4,35 @@
   # vars_files: vars.yaml
 
   tasks:
-    - name: Install apache server
-      yum: name=httpd state=present
-      notify: restart apache
 
     - name: Add centos-release-scl
       yum: name=centos-release-scl state=present
+
+    - name: Add EPEL repo
+      yum: name=epel-release state=latest
+
+    - name: Install remi repo
+      yum_repository:
+        name: remi7
+        description: REMI php repo
+        baseurl: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+        enabled: yes
+      # command: 'yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y'
+
+    - name: Install yum-utils package
+      yum: name=yum-utils state=latest
+
+    # - name: Update Centos system
+    #   yum: name=* state=latest
+
+    # - name: enable remi7 repo
+    #   yum_repository: name=remi-php70 stat=enabled
 
     - name: Install apache, MySQL, PHP and others
       yum: name={{ item }} state=present
       with_items:
         - git
+        - httpd
         - curl
         - sendmail
         - httpd
@@ -23,22 +41,46 @@
         - php-xml
         - php-pear
         - php-fpm
-        - php55
-        - php55-php
-        - php55-php-mysqlnd
-        - php55-php-gd
-        - php55-php-mbstring
+        - php
+        - php-mcrypt
+        - php-opcache
+        - php-cli
+        - php-mbstring
+        - php-gd
+        - php-curl
+        - php-mysql
+        - php-zip
+        - php-fileinfo
         - python-mysqldb
+        - mariadb
         - mariadb-server
+        notify: restart apache
 
-    - name: Stop firewall
-      service: name=firewalld state=stopped enabled=false
+    - name: Start firewall
+      service: name=firewalld state=started enabled=yes
+
+    - name: open http and https ports
+      firewalld:
+        service: name={{ item }}
+          with_items:
+            - http
+            - https
+        permanent: true
+        state: enabled
 
     - name: Start apache, MySQL and PHP
       service: name={{ item }} state=started enabled=true
       with_items:
         - httpd
         - mariadb
+
+    - name: Remove all anonymous DB users
+      mysql_db:
+        user: ''
+        host_all: yes
+        state: absent
+
+    - name: 
         
 
   handlers:
