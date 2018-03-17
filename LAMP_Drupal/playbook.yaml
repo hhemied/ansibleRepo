@@ -1,7 +1,7 @@
 ---
 - hosts: all
   sudo: yes
-  # vars_files: vars.yaml
+  vars_files: vars.yaml
 
   tasks:
 
@@ -32,6 +32,7 @@
       yum: name={{ item }} state=present
       with_items:
         - git
+        - MySQL-python
         - httpd
         - curl
         - sendmail
@@ -74,14 +75,29 @@
         - httpd
         - mariadb
 
+    - name: set root password
+      mysql_user: user=root password="{{ mysql_root_password }}" host=localhost
+
     - name: Remove all anonymous DB users
       mysql_db:
         user: ''
         host_all: yes
         state: absent
 
-    - name: 
-        
+    - name: Delete test DB
+      mysql_db: db=test state=absent
+
+    - name: Secures the MySQL root user for IPV6 localhost (::1)
+      mysql_user: user="root" password="{{ mysql_root_password }}" host="::1"
+
+    - name: Secures the MySQL root user for IPV4 localhost (127.0.0.1)
+      mysql_user: user="root" password="{{ mysql_root_password }}" host="127.0.0.1"
+
+    - name: Secures the MySQL root user for localhost domain (localhost)
+      mysql_user: user="root" password="{{ mysql_root_password }}" host="localhost"
+
+    - name: Secures the MySQL root user for server_hostname domain
+      mysql_user: user="root" password="{{ mysql_root_password }}" host="{{ ansible_fqdn }}"
 
   handlers:
     - name: restart apache
