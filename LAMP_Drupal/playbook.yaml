@@ -75,6 +75,24 @@
         - httpd
         - mariadb
 
+    # Virtual hosts
+    - name: Directory for available sites
+      file:
+        path: "/etc/httpd/sites-available"
+        state: directory
+        mode: 755
+
+    - name: Directory for available sites
+      file:
+        path: "/etc/httpd/sites-enabled"
+        state: directory
+        mode: 755
+
+    - name: Add apache virtualhost for drupal 8
+      templete:
+        src: "templates/drupal.dev.conf.j2"
+        dest: "/etc/"
+
     - name: set root password
       mysql_user: user=root password="{{ mysql_root_password }}" host=localhost
 
@@ -102,7 +120,6 @@
     - name: Create Drupal DB admin 
       mysql_user: name=omar state=present host=localhost password={{ mysql_root_password }} priv='*.*:ALL,GRANT'
 
-      
     - name: Create drupal DB
       mysql_db: name=drupal state=present
 
